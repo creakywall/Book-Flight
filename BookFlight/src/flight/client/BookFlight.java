@@ -1,5 +1,7 @@
 package flight.client;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -9,11 +11,18 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.Window;
@@ -26,8 +35,10 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.MultiWordSuggestOracle;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -65,13 +76,46 @@ public class BookFlight implements EntryPoint {
 
 	private Label returnBoxLabel = new Label("Return (yyyy-mm-dd)");
 	private TextBox returnBox = new TextBox();
+	
+	private SuggestBox airportSuggestBox = new SuggestBox();
+	private ArrayList<String> airports = new ArrayList<String>();
 
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
+		
+		RequestBuilder builder = new RequestBuilder(RequestBuilder.GET,
+				"/bookflight/GetAirports");
+
+		try {
+			// send the request
+			builder.sendRequest(null, new RequestCallback() {
+				public void onError(Request request, Throwable exception) {
+					// handle error
+				}
+
+				public void onResponseReceived(Request request,
+						Response response) {
+					// check the status code
+					int statusCode = response.getStatusCode();
+					if (statusCode == 200) {
+						String[] airportList = response.getText().split("\n");
+
+						MultiWordSuggestOracle oracle = new MultiWordSuggestOracle();
+						oracle.addAll(Arrays.asList(airportList));
+
+						airportSuggestBox = new SuggestBox(oracle);
+						//addPanel.add(newSymbolTextBox);
+						fTable.setWidget(0, 1, airportSuggestBox);						
+					}
+				}
+			});
+		} catch (RequestException e) {
+			// handle error
+		}
 		fTable.setWidget(0, 0, fromBoxLabel);
-		fTable.setWidget(0, 1, fromBox);
+		//fTable.setWidget(0, 1, fromBox);
 		fTable.setWidget(1, 0, toBoxLabel);
 		fTable.setWidget(1, 1, toBox);
 		fTable.setWidget(2, 0, leaveBoxLabel);
@@ -161,7 +205,16 @@ public class BookFlight implements EntryPoint {
 		tpanel.selectTab(0);
 
 		RootPanel.get("bookFlight").add(tpanel);
-
+		
+		airportSuggestBox.setFocus(true);
+		
+		airportSuggestBox.addKeyPressHandler(new KeyPressHandler(){
+			public void onKeyPress(KeyPressEvent event){
+				if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+				}
+			}
+		});
+		
 		search.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent e) {
 				String fromAirport = fromBox.getText().trim();

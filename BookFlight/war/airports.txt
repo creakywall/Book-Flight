@@ -1,0 +1,5 @@
+LAS (Las Vegas)
+LAX (Los Angeles)
+SLC (Salt Lake City)
+BOS (Boston)
+JFK (New York)

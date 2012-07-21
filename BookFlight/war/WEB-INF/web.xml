@@ -2,20 +2,19 @@
 
   <!-- Servlets -->
   <servlet>
-    <servlet-name>greetServlet</servlet-name>
-    <servlet-class>flight.server.GreetingServiceImpl</servlet-class>
+    <servlet-name>GetAirports</servlet-name>
+    <servlet-class>flight.server.GetAirports</servlet-class>
   </servlet>
   
   <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/bookflight/greet</url-pattern>
+    <servlet-name>GetAirports</servlet-name>
+    <url-pattern>/bookflight/GetAirports</url-pattern>
   </servlet-mapping>
   
   <!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>BookFlight.html</welcome-file>
   </welcome-file-list>
-
   <servlet>
     <servlet-name>SystemServiceServlet</servlet-name>
     <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
