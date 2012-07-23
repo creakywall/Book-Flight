@@ -1,2 +1,0 @@
-serviceClass: flight.client.GreetingService
-path: 67EC858FE2296FAE982123FDF101AF37.gwt.rpc

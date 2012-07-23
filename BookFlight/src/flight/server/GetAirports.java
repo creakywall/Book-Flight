@@ -5,7 +5,8 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
-public class GetAirports extends HttpServlet{
+@SuppressWarnings("serial")
+public class GetAirports extends HttpServlet {
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {

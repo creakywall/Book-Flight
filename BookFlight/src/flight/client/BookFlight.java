@@ -49,6 +49,7 @@ import com.google.gwt.core.client.EntryPoint;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
+@SuppressWarnings("unused")
 public class BookFlight implements EntryPoint {
 
 	private TabPanel tpanel = new TabPanel();
@@ -62,11 +63,10 @@ public class BookFlight implements EntryPoint {
 	private DatePicker startDate = new DatePicker();
 	private DatePicker endDate = new DatePicker();
 	private Button search = new Button("Find Flight");
-	private Label passengers = new Label("Passengers");
-	private ListBox pListBox = new ListBox();
+	private Label aPassengers = new Label("Adult Passengers");
+	private ListBox aPListBox = new ListBox();
 
 	private Label fromBoxLabel = new Label("From Airport");
-	private TextBox fromBox = new TextBox();
 
 	private Label toBoxLabel = new Label("To Airport");
 	private TextBox toBox = new TextBox();
@@ -76,15 +76,16 @@ public class BookFlight implements EntryPoint {
 
 	private Label returnBoxLabel = new Label("Return (yyyy-mm-dd)");
 	private TextBox returnBox = new TextBox();
-	
-	private SuggestBox airportSuggestBox = new SuggestBox();
-	private ArrayList<String> airports = new ArrayList<String>();
+
+	private SuggestBox airportSuggestBoxFrom = new SuggestBox();
+	private SuggestBox airportSuggestBoxTo = new SuggestBox();
 
 	/**
 	 * This is the entry point method.
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void onModuleLoad() {
-		
+
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.GET,
 				"/bookflight/GetAirports");
 
@@ -105,9 +106,10 @@ public class BookFlight implements EntryPoint {
 						MultiWordSuggestOracle oracle = new MultiWordSuggestOracle();
 						oracle.addAll(Arrays.asList(airportList));
 
-						airportSuggestBox = new SuggestBox(oracle);
-						//addPanel.add(newSymbolTextBox);
-						fTable.setWidget(0, 1, airportSuggestBox);						
+						airportSuggestBoxFrom = new SuggestBox(oracle);
+						airportSuggestBoxTo = new SuggestBox(oracle);
+						fTable.setWidget(0, 1, airportSuggestBoxFrom);
+						fTable.setWidget(1, 1, airportSuggestBoxTo);
 					}
 				}
 			});
@@ -115,9 +117,7 @@ public class BookFlight implements EntryPoint {
 			// handle error
 		}
 		fTable.setWidget(0, 0, fromBoxLabel);
-		//fTable.setWidget(0, 1, fromBox);
 		fTable.setWidget(1, 0, toBoxLabel);
-		fTable.setWidget(1, 1, toBox);
 		fTable.setWidget(2, 0, leaveBoxLabel);
 		fTable.setWidget(2, 1, leaveBox);
 		fTable.setWidget(3, 0, returnBoxLabel);
@@ -128,18 +128,18 @@ public class BookFlight implements EntryPoint {
 		fTable.setWidget(2, 2, cal1);
 		fTable.setWidget(3, 2, cal2);
 
-		fTable.setWidget(4, 0, passengers);
-		pListBox.addItem("1", "1");
-		pListBox.addItem("2", "2");
-		pListBox.addItem("3", "3");
-		pListBox.addItem("4", "4");
-		pListBox.addItem("5", "5");
-		pListBox.addItem("6", "6");
-		pListBox.addItem("7", "7");
-		pListBox.addItem("8", "8");
-		pListBox.addItem("9", "9");
-		pListBox.addItem("10", "10");
-		fTable.setWidget(4, 1, pListBox);
+		fTable.setWidget(4, 0, aPassengers);
+		aPListBox.addItem("1", "1");
+		aPListBox.addItem("2", "2");
+		aPListBox.addItem("3", "3");
+		aPListBox.addItem("4", "4");
+		aPListBox.addItem("5", "5");
+		aPListBox.addItem("6", "6");
+		aPListBox.addItem("7", "7");
+		aPListBox.addItem("8", "8");
+		aPListBox.addItem("9", "9");
+		aPListBox.addItem("10", "10");
+		fTable.setWidget(4, 1, aPListBox);
 
 		fTable.setWidget(5, 0, search);
 
@@ -177,8 +177,6 @@ public class BookFlight implements EntryPoint {
 				Date date = (Date) event.getValue();
 				PredefinedFormat pdf = PredefinedFormat.DATE_SHORT;
 				String dateString = DateTimeFormat.getFormat(pdf).format(date);
-				// String dateString =
-				// DateTimeFormat.getShortDateFormat().format(date);
 				leaveBox.setText(dateString);
 				cal1pop.hide();
 			}
@@ -189,8 +187,6 @@ public class BookFlight implements EntryPoint {
 				Date date = (Date) event.getValue();
 				PredefinedFormat pdf = PredefinedFormat.DATE_SHORT;
 				String dateString = DateTimeFormat.getFormat(pdf).format(date);
-				// String dateString =
-				// DateTimeFormat.getShortDateFormat().format(date);
 				returnBox.setText(dateString);
 				cal2pop.hide();
 			}
@@ -205,23 +201,19 @@ public class BookFlight implements EntryPoint {
 		tpanel.selectTab(0);
 
 		RootPanel.get("bookFlight").add(tpanel);
-		
-		airportSuggestBox.setFocus(true);
-		
-		airportSuggestBox.addKeyPressHandler(new KeyPressHandler(){
-			public void onKeyPress(KeyPressEvent event){
-				if (event.getCharCode() == KeyCodes.KEY_ENTER) {
-				}
-			}
-		});
-		
+
+		airportSuggestBoxFrom.setFocus(true);
+
 		search.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent e) {
-				String fromAirport = fromBox.getText().trim();
-				String toAirport = toBox.getText().trim();
+				String fromAirport = airportSuggestBoxFrom.getText().trim();
+				String toAirport = airportSuggestBoxTo.getText().trim();
 
 				String searchStart = leaveBox.getText().trim();
 				String searchEnd = returnBox.getText().trim();
+
+				int aInd = aPListBox.getSelectedIndex();
+				String adult = aPListBox.getValue(aInd);
 
 				if (fromAirport.length() == 0) {
 					Window.alert("'From' airport is required");
@@ -255,11 +247,11 @@ public class BookFlight implements EntryPoint {
 							Window.alert("Departure date cannot be in the past");
 						} else if (dend.before(now())) {
 							Window.alert("Arrival date cannot be in the past");
+						} else {
+							bookFlight(fromAirport, toAirport, searchStart,
+									searchEnd, adult);
 						}
-						else{
-							bookFlight();
-						}
-					} 
+					}
 				}
 			}
 		});
@@ -274,7 +266,11 @@ public class BookFlight implements EntryPoint {
 
 	}
 
-	private void bookFlight() {
+	private void bookFlight(String from, String to, String searchStart,
+			String searchEnd, String adult) {
 		Window.alert("Your flight is booked.");
+		Window.open("http://www.kayak.com/#/flights/" + from + "-" + to + "/"
+				+ searchStart + "/" + searchEnd + "/" + adult + "adults",
+				"_blank", null);
 	}
 }
